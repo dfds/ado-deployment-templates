@@ -48,7 +48,7 @@ Fill in the variables with the values as described in the [Authenticating agains
 :exclamation: It is important to use capital letters for the variable names as this will mount them as Environment Variables.
 
 <!----------------- Links ----------------->
-[PB-info]: https://playbooks.dfds.cloud/pipelines/obtain-info.html
-[PB-auth]: https://playbooks.dfds.cloud/pipelines/authentication.html
+[PB-info]: https://wiki.dfds.cloud/en/playbooks/deployment/obtain-info
+[PB-auth]: https://wiki.dfds.cloud/en/playbooks/deployment/authentication
 [K8S-config]: https://dfds-oxygen-k8s-public.s3-eu-west-1.amazonaws.com/kubeconfig/hellman-saml.config
-[PB-ADOsvc]: https://playbooks.dfds.cloud/deployment/k8s-service-connection.html#intro
+[PB-ADOsvc]: https://wiki.dfds.cloud/en/playbooks/deployment/k8s-service-connection

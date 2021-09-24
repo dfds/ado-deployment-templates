@@ -28,7 +28,7 @@ This service connection can be reused for all deployments in your Azure DevOps p
 
 #### AWS ECR Service Connection
 
-If you don't already have a Service Connection in your Azure DevOps project for AWS ECR Push Prod or similar that allows you to push to the shared ECR repository, you need to request this for your project in the #dev-excellence slack channel.
+If you don't already have a Service Connection in your Azure DevOps project for AWS ECR Push Prod or similar that allows you to push to the shared ECR repository, you need to request this for your project in TopDesk or in the #dev-peer-support slack channel.
 
 If you do not have an image repository in the shared ECR you will need to request this as well.
 

@@ -32,9 +32,17 @@ stages:
   - job: Validate   
    # Validate pipeline / group variables
     steps:   
-    - bash:
-        echo 'Checking for required authentication variables...'
-        bash -c '[[ -z $AWS_PROFILE || -z $SAML2AWS_ROLE || -z $SAML2AWS_PASSWORD || -z $SAML2AWS_USERNAME ]] && exit 1 || true'
+    - task: Bash@3
+      inputs: 
+        targetType: inline
+        script: |
+          echo 'Checking for required authentication variables...'
+          bash -c '[[ -z $AWS_PROFILE || -z $SAML2AWS_ROLE || -z $SAML2AWS_PASSWORD || -z $SAML2AWS_USERNAME ]] && exit 1 || true'
+
+          if [[ $? -ne 0 ]]; then
+            echo 'Some environment variables are not set or they have empty values...'
+            exit 1
+          fi
       displayName: Testing environment variables
 
   - job: Build

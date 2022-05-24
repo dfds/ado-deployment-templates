@@ -151,3 +151,4 @@ stages:
               namespace: '$(kubernetes-namespace)'
               command: apply
               arguments: '-f $(Pipeline.Workspace)/manifests/'
+              versionSpec: 1.22.9

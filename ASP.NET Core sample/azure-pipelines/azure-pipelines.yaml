@@ -119,8 +119,13 @@ stages:
                 sudo mv saml2aws /usr/local/bin
                 
                 # Configure saml2aws
-                REGION="${SAML2AWS_REGION:-eu-west-1}"
-                saml2aws configure --url=https://adfs.dfds.com/adfs/ls/IdpInitiatedSignOn.aspx --idp-provider=ADFS --mfa=Auto --session-duration=28800 --skip-prompt --region=$REGION
+                # Configure saml2aws
+                if [[ $SAML2AWS_REGION == "\$(SAML2AWS_REGION)" ]]; then
+                  SAML2AWS_REGION=eu-west-1; export SAML2AWS_REGION
+                else
+                  SAML2AWS_REGION=$SAML2AWS_REGION; export SAML2AWS_REGION
+                fi
+                saml2aws configure --url=https://adfs.dfds.com/adfs/ls/IdpInitiatedSignOn.aspx --idp-provider=ADFS --mfa=Auto --session-duration=28800 --skip-prompt --region=$SAML2AWS_REGION
                 
                 # Export saml2aws unattended pipeline script
                 saml2aws login --url=https://adfs.dfds.com/adfs/ls/IdpInitiatedSignOn.aspx --idp-provider=ADFS --mfa=Auto --skip-prompt --force --disable-keychain

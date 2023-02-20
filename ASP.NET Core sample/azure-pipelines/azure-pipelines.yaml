@@ -100,12 +100,11 @@ stages:
               targetType: 'inline'
               script: |
                 # Software versions
-                SAML2AWS_VERSION="2.20.0"
-                AWS_IAM_VERSION="1.14.6"
-                AWS_IAM_BUILD_DATE="2019-08-22"
+                SAML2AWS_VERSION="2.36.2"
+                AWS_IAM_VERSION="0.6.2"
                 
                 # Install aws-iam-authenticator
-                DOWNLOAD_URL=https://amazon-eks.s3-us-west-2.amazonaws.com/${AWS_IAM_VERSION}/${AWS_IAM_BUILD_DATE}/bin/linux/amd64/aws-iam-authenticator
+                DOWNLOAD_URL=https://github.com/kubernetes-sigs/aws-iam-authenticator/releases/download/v${AWS_IAM_VERSION}/aws-iam-authenticator_${AWS_IAM_VERSION}_linux_amd64
                 LOCAL_FILE=./aws-iam-authenticator
                 curl -Lo $LOCAL_FILE $DOWNLOAD_URL
                 chmod +x $LOCAL_FILE
@@ -120,13 +119,15 @@ stages:
                 sudo mv saml2aws /usr/local/bin
                 
                 # Configure saml2aws
-                saml2aws configure --url=https://adfs.dfds.com/adfs/ls/IdpInitiatedSignOn.aspx --idp-provider=ADFS --mfa=Auto --session-duration=28800 --skip-prompt
+                REGION="${SAML2AWS_REGION:-eu-west-1}"
+                saml2aws configure --url=https://adfs.dfds.com/adfs/ls/IdpInitiatedSignOn.aspx --idp-provider=ADFS --mfa=Auto --session-duration=28800 --skip-prompt --region=$REGION
                 
                 # Export saml2aws unattended pipeline script
                 saml2aws login --url=https://adfs.dfds.com/adfs/ls/IdpInitiatedSignOn.aspx --idp-provider=ADFS --mfa=Auto --skip-prompt --force --disable-keychain
                 eval $(saml2aws script --url=https://adfs.dfds.com/adfs/ls/IdpInitiatedSignOn.aspx --idp-provider=ADFS --mfa=Auto)
             env:
               SAML2AWS_PASSWORD: $(SAML2AWS_PASSWORD)
+              SAML2AWS_REGION: $(SAML2AWS_REGION)
           
           # Download manifest from current artifacts pipeline
           - download: current

@@ -119,7 +119,6 @@ stages:
                 sudo mv saml2aws /usr/local/bin
                 
                 # Configure saml2aws
-                # Configure saml2aws
                 if [[ $SAML2AWS_REGION == "\$(SAML2AWS_REGION)" ]]; then
                   SAML2AWS_REGION=eu-west-1; export SAML2AWS_REGION
                 else

@@ -21,7 +21,7 @@ pool:
 
 # Global variables for the pipeline
 variables:
-  k8s-service-connection: 'Kubernetes-Hellman-Saml2aws'
+  k8s-service-connection: 'Kubernetes-Hellman-sandbox-hemor-lbprn'
   kubernetes-namespace: 'sandbox-hemor-lbprn'
 
 stages:
@@ -29,22 +29,6 @@ stages:
 - stage: CI
   displayName: 'Continuous Integration'
   jobs:
-  - job: Validate   
-   # Validate pipeline / group variables
-    steps:   
-    - task: Bash@3
-      inputs: 
-        targetType: inline
-        script: |
-          echo 'Checking for required authentication variables...'
-          bash -c '[[ -z $AWS_PROFILE || -z $SAML2AWS_ROLE || -z $SAML2AWS_PASSWORD || -z $SAML2AWS_USERNAME ]] && exit 1 || true'
-
-          if [[ $? -ne 0 ]]; then
-            echo 'Some environment variables are not set or they have empty values...'
-            exit 1
-          fi
-      displayName: Testing environment variables
-
   - job: Build
     # Use multistage image to compile code and build image
     displayName: 'Build image and push to ECR'
@@ -76,68 +60,29 @@ stages:
         targetPath: '$(System.DefaultWorkingDirectory)/k8s'
         artifact: 'manifests'
         publishLocation: 'pipeline'
-        displayName: 'Publish Artifact: manifests'    
+        displayName: 'Publish Artifact: manifests'
 
 # Continuous Deployment steps
 - stage: CD
   displayName: 'Continuous Deployment'
   dependsOn: CI
   # Run CD only if CI succeeds and if pipeline runs from Master branch
-  condition: and(succeeded('CI'), eq(variables['Build.SourceBranch'], 'refs/heads/master')) 
+  condition: and(succeeded('CI'), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
 
-  jobs:  
+  jobs:
   # Deployment job for kubernetes deployments
   - deployment: K8s
     displayName: 'Deploy to Kubernetes'
     environment: 'Hellman'
-    strategy: 
+    strategy:
       runOnce:
         deploy:
           steps:
-          # Use SAML2AWS for Kubernetes authentication
-          - task: Bash@3
-            inputs:
-              targetType: 'inline'
-              script: |
-                # Software versions
-                SAML2AWS_VERSION="2.36.2"
-                AWS_IAM_VERSION="0.6.2"
-                
-                # Install aws-iam-authenticator
-                DOWNLOAD_URL=https://github.com/kubernetes-sigs/aws-iam-authenticator/releases/download/v${AWS_IAM_VERSION}/aws-iam-authenticator_${AWS_IAM_VERSION}_linux_amd64
-                LOCAL_FILE=./aws-iam-authenticator
-                curl -Lo $LOCAL_FILE $DOWNLOAD_URL
-                chmod +x $LOCAL_FILE
-                sudo mv $LOCAL_FILE /usr/local/bin
-                
-                # Install saml2aws
-                DOWNLOAD_URL=https://github.com/Versent/saml2aws/releases/download/v${SAML2AWS_VERSION}/saml2aws_${SAML2AWS_VERSION}_linux_amd64.tar.gz
-                LOCAL_FILE=./saml2aws.tar.gz
-                curl -Lo $LOCAL_FILE $DOWNLOAD_URL
-                tar xvzf $LOCAL_FILE
-                rm $LOCAL_FILE
-                sudo mv saml2aws /usr/local/bin
-                
-                # Configure saml2aws
-                if [[ $SAML2AWS_REGION == "\$(SAML2AWS_REGION)" ]]; then
-                  SAML2AWS_REGION=eu-west-1; export SAML2AWS_REGION
-                else
-                  SAML2AWS_REGION=$SAML2AWS_REGION; export SAML2AWS_REGION
-                fi
-                saml2aws configure --url=https://adfs.dfds.com/adfs/ls/IdpInitiatedSignOn.aspx --idp-provider=ADFS --mfa=Auto --session-duration=28800 --skip-prompt --region=$SAML2AWS_REGION
-                
-                # Export saml2aws unattended pipeline script
-                saml2aws login --url=https://adfs.dfds.com/adfs/ls/IdpInitiatedSignOn.aspx --idp-provider=ADFS --mfa=Auto --skip-prompt --force --disable-keychain
-                eval $(saml2aws script --url=https://adfs.dfds.com/adfs/ls/IdpInitiatedSignOn.aspx --idp-provider=ADFS --mfa=Auto)
-            env:
-              SAML2AWS_PASSWORD: $(SAML2AWS_PASSWORD)
-              SAML2AWS_REGION: $(SAML2AWS_REGION)
-          
           # Download manifest from current artifacts pipeline
           - download: current
             artifact: manifests
             displayName: 'Download Artifact: manifests'
-          
+
           # Replace token values in yaml files with pipeline variables
           - task: qetza.replacetokens.replacetokens-task.replacetokens@3
             displayName: 'Replace tokens in yaml files'
@@ -146,7 +91,7 @@ stages:
               targetFiles: '*.yaml'
               tokenPrefix: '$('
               tokenSuffix: ')'
-          
+
           # Apply Kubernetes manifests
           - task: Kubernetes@1
             displayName: 'Apply manifests'
